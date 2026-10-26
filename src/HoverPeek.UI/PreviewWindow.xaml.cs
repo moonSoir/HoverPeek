@@ -575,13 +575,12 @@ public partial class PreviewWindow : Window
         var fixedWidth  = _windowWidth;
         var fixedHeight = _windowHeight;
 
-    // Рабочая область монитора под курсором (в физических пикселях)
+
         var screen = System.Windows.Forms.Screen.FromPoint(
             new System.Drawing.Point(mouseX, mouseY));
 
-        var wa = screen.WorkingArea; // физические пиксели
+        var wa = screen.WorkingArea;
 
-    // Переводим физические пиксели в DIP (WPF-единицы), чтобы Left/Top были корректны
         var source = PresentationSource.FromVisual(this);
         Matrix toDip = Matrix.Identity;
         if (source?.CompositionTarget != null)
