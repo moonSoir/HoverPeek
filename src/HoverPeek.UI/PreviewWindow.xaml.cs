@@ -572,26 +572,51 @@ public partial class PreviewWindow : Window
 
     private void PositionWindow(int mouseX, int mouseY)
     {
-        var screenWidth = SystemParameters.PrimaryScreenWidth;
-        var screenHeight = SystemParameters.PrimaryScreenHeight;
-
-        var fixedWidth = _windowWidth;
+        var fixedWidth  = _windowWidth;
         var fixedHeight = _windowHeight;
 
-        double left = (screenWidth - fixedWidth) / 2;
-        double top = (screenHeight - fixedHeight) / 2;
+    // Рабочая область монитора под курсором (в физических пикселях)
+        var screen = System.Windows.Forms.Screen.FromPoint(
+            new System.Drawing.Point(mouseX, mouseY));
 
-        if (left < 10) left = 10;
-        if (top < 10) top = 10;
-        if (left + fixedWidth > screenWidth - 10)
-            left = screenWidth - fixedWidth - 10;
-        if (top + fixedHeight > screenHeight - 10)
-            top = screenHeight - fixedHeight - 10;
+        var wa = screen.WorkingArea; // физические пиксели
 
-        Width = fixedWidth;
+    // Переводим физические пиксели в DIP (WPF-единицы), чтобы Left/Top были корректны
+        var source = PresentationSource.FromVisual(this);
+        Matrix toDip = Matrix.Identity;
+        if (source?.CompositionTarget != null)
+           toDip = source.CompositionTarget.TransformFromDevice;
+
+        var waTopLeft     = toDip.Transform(new System.Windows.Point(wa.Left,  wa.Top));
+        var waBottomRight = toDip.Transform(new System.Windows.Point(wa.Right, wa.Bottom));
+        var waWidth  = waBottomRight.X - waTopLeft.X;
+        var waHeight = waBottomRight.Y - waTopLeft.Y;
+
+        double left, top;
+
+        if (_centerWindow)
+        {
+            left = waTopLeft.X + (waWidth  - fixedWidth)  / 2;
+            top  = waTopLeft.Y + (waHeight - fixedHeight) / 2;
+        }
+        else
+        {
+            const double offset = 20;
+            left = mouseX + offset;
+            top  = mouseY + offset;
+        }
+
+    // Прижимаем к границам рабочей области этого монитора
+        const double margin = 10;
+        if (left < waTopLeft.X + margin) left = waTopLeft.X + margin;
+        if (top  < waTopLeft.Y + margin) top  = waTopLeft.Y + margin;
+        if (left + fixedWidth  > waBottomRight.X - margin) left = waBottomRight.X - fixedWidth  - margin;
+        if (top  + fixedHeight > waBottomRight.Y - margin) top  = waBottomRight.Y - fixedHeight - margin;
+
+        Width  = fixedWidth;
         Height = fixedHeight;
-        Left = left;
-        Top = top;
+        Left   = left;
+        Top    = top;
     }
 
     private void FadeIn()
