@@ -605,7 +605,6 @@ public partial class PreviewWindow : Window
             top  = mouseY + offset;
         }
 
-    // Прижимаем к границам рабочей области этого монитора
         const double margin = 10;
         if (left < waTopLeft.X + margin) left = waTopLeft.X + margin;
         if (top  < waTopLeft.Y + margin) top  = waTopLeft.Y + margin;
